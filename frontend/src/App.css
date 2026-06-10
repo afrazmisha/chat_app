@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 220px 1fr 280px;
+  height: 100vh;
+}
+
+.sidebar {
+  border-right: 1px solid #ddd;
+  padding: 20px;
+}
+
+.main-chat {
+  padding: 20px;
+}
+
+.private-panel {
+  border-left: 1px solid #ddd;
+  padding: 20px;
+}
+
+.user-card {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 20px;
+}
