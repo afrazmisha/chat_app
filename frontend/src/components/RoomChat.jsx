@@ -64,41 +64,48 @@ function RoomChat({ user }) {
     }
 
     return (
-        <div>
-            <h1>Room: {user.room}</h1>
+        <>
+            <div className="room-header">
+                <div>
+                    <h2>Room: {user.room}</h2>
+                    <p>{users.length} member(s) online</p>
+                </div>
+            </div>
             <div>
-                <h3>Online Users</h3>
+                <div>
+                    <h3>Online Users</h3>
 
-                {users.map((onlineUser, index) => (
-                    <p key={index}>• {onlineUser}</p>
-                ))}
+                    {users.map((onlineUser, index) => (
+                        <p key={index}>• {onlineUser}</p>
+                    ))}
+                </div>
+
+                <p>Status: {status}</p>
+
+                <div style={{ border: "1px solid black", height: "300px", overflowY: "auto" }}>
+                    {messages.map((message, index) => (
+                        <MessageBubble
+                            key={index}
+                            message={message}
+                            currentUsername={user.username}
+                        />
+                    ))}
+                </div>
+
+                <br />
+
+                <input
+                    placeholder="Type message"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") sendMessage();
+                    }}
+                />
+
+                <button onClick={sendMessage}>Send</button>
             </div>
-
-            <p>Status: {status}</p>
-
-            <div style={{ border: "1px solid black", height: "300px", overflowY: "auto" }}>
-                {messages.map((message, index) => (
-                    <MessageBubble
-                        key={index}
-                        message={message}
-                        currentUsername={user.username}
-                    />
-                ))}
-            </div>
-
-            <br />
-
-            <input
-                placeholder="Type message"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") sendMessage();
-                }}
-            />
-
-            <button onClick={sendMessage}>Send</button>
-        </div>
+        </>
     );
 }
 

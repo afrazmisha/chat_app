@@ -28,3 +28,18 @@ body {
   padding: 10px;
   margin-bottom: 20px;
 }
+
+.room-header {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.room-header h2 {
+  margin: 0;
+}
+
+.room-header p {
+  margin: 5px 0 0;
+  color: gray;
+}
