@@ -1,6 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from datetime import datetime
-from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 

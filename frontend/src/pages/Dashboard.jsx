@@ -1,32 +1,14 @@
-
 import { useState } from "react"
-import OnlineUsers from "../components/OnlineUsers"
 import PrivateChat from "../components/PrivateChat"
-import RoomChat from "../components/PrivateChat"
+import RoomChat from "../components/RoomChat"
 
 function Dashboard({ user, setUser }) {
-    const [currentRoom, setCurrentRoom] = useState(user.room)
-    const [roomInput, setRoomInput] = useState("")
-    const [joinedRooms, setJoinedRooms] = useState([user.room])
-
-    function joinNewRoom() {
-        const newRoom = roomInput.trim();
-
-        if (!newRoom) return;
-
-        setCurrentRoom(newRoom)
-
-        if (!joinedRooms.includes(newRoom)) {
-            setJoinedRooms([...joinedRooms, newRoom]);
-        }
-
-        setRoomInput("")
-    }
+    const [currentRoom, setCurrentRoom] = useState(user.room);
 
     const activeUser = {
         ...user,
-        room: currentRoom,
-    }
+        room: currentRoom
+    };
 
     return (
         <div className="dashboard">
@@ -35,34 +17,18 @@ function Dashboard({ user, setUser }) {
 
                 <div className="user-card">
                     <strong>{user.username}</strong>
-                    <p>Current Room: {currentRoom}</p>
+                    <p>Room: {user.room}</p>
                 </div>
 
-                <h3>Join Room</h3>
-
-                <input
+                <input 
                     placeholder="Room Name"
-                    value={roomInput}
-                    onChange={(e) => setRoomInput(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === 'Enter') joinNewRoom
+                        if (e.key === "Enter" && e.target.value.trim()) {
+                            setCurrentRoom(e.target.value.trim());
+                            e.target.value = "";
+                        }
                     }}
                 />
-
-                <button onClick={joinNewRoom}>Join</button>
-
-                <h3>Joined Rooms</h3>
-
-                {joinedRooms.map((room) => {
-                    <button
-                        key={room}
-                        onClick={() => setCurrentRoom(room)}
-                    >
-                        {room}
-                    </button>
-                })}
-
-                <OnlineUsers />
 
                 <button onClick={() => setUser(null)}>
                     Logout

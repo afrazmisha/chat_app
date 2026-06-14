@@ -17,13 +17,13 @@ function JoinPage({ setUser }) {
     }
 
     return (
-        <div>
+        <div>``
             <h1>Join the Chat Room</h1>
 
             <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
             <br />
             <br />
-            <input placeholder="Room" value={room} value ={room} onChange={(e) => setRoom(e.target.value)} />
+            <input placeholder="Room" value={room} value={room} onChange={(e) => setRoom(e.target.value)} />
             <br />
             <br />
             <button onClick={handleJoin}>Join Room</button>

@@ -5,8 +5,8 @@ function RoomChat({ user }) {
     const [roomMessages, setRoomMessages] = useState({});
     const messages = roomMessages[user.room] || [];
     const [text, setText] = useState("");
-    const [status, setStatus] = useState("Connecting...");
     const [users, setUsers] = useState([])
+    const [status, setStatus] = useState("Connecting...");
     const socketRef = useRef(null);
 
     useEffect(() => {
@@ -26,14 +26,14 @@ function RoomChat({ user }) {
             const data = JSON.parse(event.data);
 
             if (data.type === "users") {
-                setUsers(data.users)
-                return
+                setUsers(data.users);
+                return;
             }
 
             setRoomMessages((prev) => ({
                 ...prev,
                 [user.room]: [...(prev[user.room] || []), data],
-            }))
+            }));
         };
 
         socket.onerror = (error) => {
@@ -49,6 +49,7 @@ function RoomChat({ user }) {
         return () => {
             socket.close();
         };
+
     }, [user.room, user.username]);
 
     function sendMessage() {
@@ -69,8 +70,10 @@ function RoomChat({ user }) {
                 <div>
                     <h2>Room: {user.room}</h2>
                     <p>{users.length} member(s) online</p>
+                    <small>Status: {status}</small>
                 </div>
             </div>
+
             <div>
                 <div>
                     <h3>Online Users</h3>
