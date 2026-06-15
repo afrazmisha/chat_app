@@ -3,16 +3,15 @@ from datetime import datetime
 
 app = FastAPI()
 
-
 @app.get("/")
 def home():
     return {"message": "Chat backend is running"}
-
 
 class ConnectionManager:
     def __init__(self):
         self.rooms = {}
         self.users = {}
+        self.active_users = {}
 
     async def connect(self, room: str, username: str, websocket: WebSocket):
         await websocket.accept()
@@ -23,6 +22,7 @@ class ConnectionManager:
 
         self.rooms[room].append(websocket)
         self.users[room].append(username)
+        self.active_users[username] = websocket
 
     def disconnect(self, room: str, username: str, websocket: WebSocket):
         if room in self.rooms:
@@ -31,6 +31,9 @@ class ConnectionManager:
 
             if username in self.users[room]:
                 self.users[room].remove(username)
+
+                if username in self.active_users:
+                    del self.active_users[username]
 
             if len(self.rooms[room]) == 0:
                 del self.rooms[room]
@@ -57,6 +60,24 @@ class ConnectionManager:
             "users": self.users.get(room, [])
         })
 
+    async def broadcast_global_users(self):
+        global_users = list(self.active_users.keys())
+        
+        for connection in self.active_users.values():
+            await connection.send_json({
+                "type": "global_users",
+                "users": global_users
+                })
+
+    async def send_private_message(self, sender: str, receiver: str, data: dict):
+        sender_socket = self.active_users.get(sender)
+        receiver_socket = self.active_users.get(receiver)
+
+        if sender_socket:
+            await sender_socket.send_json(data)
+
+        if receiver_socket and receiver_socket != sender_socket:
+            await receiver_socket.send_json(data)
 
 manager = ConnectionManager()
 
@@ -71,18 +92,32 @@ async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
         })
     
     await manager.broadcast_users(room)
+    await manager.broadcast_global_users()
 
     try:
         while True:
-            message = await websocket.receive_text()
+            raw_message = await websocket.receive_json()
             timestamp = datetime.now().strftime("%H:%M")
 
-            await manager.broadcast(room, {
-                "type": "message",
-                "username": username,
-                "text": message,
-                "time": timestamp
-            })
+            if raw_message["type"] == "room_message":
+                await manager.broadcast(room, {
+                    "type": "room_message",
+                    "username": username,
+                    "text": raw_message["text"],
+                    "time": timestamp,
+                    "room": room
+                })
+
+            elif raw_message["type"] == "private_message":
+                receiver = raw_message["to"]
+
+                await manager.send_private_message(username, receiver, {
+                    "type": "private_message",
+                    "from": username,
+                    "to": receiver,
+                    "text": raw_message["text"],
+                    "time": timestamp
+                })
 
     except WebSocketDisconnect:
         manager.disconnect(room, username, websocket)
@@ -93,3 +128,4 @@ async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
         })
 
         await manager.broadcast_users(room)
+        await manager.broadcast_global_users()
