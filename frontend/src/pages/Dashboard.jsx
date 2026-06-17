@@ -11,6 +11,8 @@ function Dashboard({ user, setUser }) {
     const [text, setText] = useState("");
     const [globalUsers, setGlobalUsers] = useState([]);
     const [privateMessages, setPrivateMessages] = useState({});
+    const [selectedPrivateUser, setSelectedPrivateUser] = useState(null);
+    const [privateUnread, setPrivateUnread] = useState({});
 
     const socketRef = useRef(null);
 
@@ -38,12 +40,20 @@ function Dashboard({ user, setUser }) {
             }
 
             if (data.type === "private_message") {
-                const otherUser = data.from === user.username ? data.to : data.from;
+                const otherUser = 
+                    data.from === user.username ? data.to : data.from;
 
                 setPrivateMessages((prev) => ({
                     ...prev,
                     [otherUser]: [...(prev[otherUser] || []), data],
                 }));
+
+                if (data.from !== user.username && selectedPrivateUser !== otherUser) {
+                    setPrivateUnread((prev) => ({
+                        ...prev,
+                        [otherUser]: (prev[otherUser] || 0) + 1,
+                    }));
+                }
 
                 return;
             }
@@ -114,6 +124,15 @@ function Dashboard({ user, setUser }) {
         )
     }
 
+    function openPrivateChat(username){
+        setSelectedPrivateUser(username);
+
+        setPrivateUnread((prev) => ({
+            ...prev,
+            [username]: 0,
+        }));
+    }
+
     return (
         <div className="dashboard">
             <aside className="sidebar">
@@ -170,6 +189,9 @@ function Dashboard({ user, setUser }) {
                     currentUsername={user.username} 
                     privateMessages={privateMessages}
                     sendPrivateMessage={sendPrivateMessage}
+                    selectedPrivateUser={selectedPrivateUser}
+                    openPrivateChat={openPrivateChat}
+                    privateUnread={privateUnread}
                 />
             </aside>
         </div>

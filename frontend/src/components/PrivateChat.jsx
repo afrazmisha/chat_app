@@ -1,20 +1,19 @@
 import { useState } from "react";
 
-function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivateMessage }) {
-    const [selectedUser, setSelectedUser] = useState(null)
+function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivateMessage, selectedPrivateUser, openPrivateChat, privateUnread }) {
     const [text, setText] = useState("")
 
     const otherUsers = globalUsers.filter(
         (username) => username !== currentUsername
     );
 
-    const messages = selectedUser 
-    ? privateMessages[selectedUser] || [] : [];
+    const messages = selectedPrivateUser 
+    ? privateMessages[selectedPrivateUser] || [] : [];
 
     function handleSend() {
-        if (!selectedUser) return;
+        if (!selectedPrivateUser) return;
 
-        sendPrivateMessage(selectedUser, text);
+        sendPrivateMessage(selectedPrivateUser, text);
         setText("");
     }
 
@@ -22,25 +21,28 @@ function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivat
         <div>
             <h3>Private Chat</h3>
             
-            <h4>Online Users</h4>
+            <h4>Conversations</h4>
 
             {otherUsers.map((username) => (
-                <button key={username} onClick={() => setSelectedUser(username)}>
+                <button 
+                    key={username}
+                    onClick={() => openPrivateChat(username)}
+                >
                     {username}
+                    {privateUnread[username] > 0 && ` (${privateUnread[username]})`}
                 </button>
             ))}
 
             <hr />
 
-            {selectedUser ? (
+            {selectedPrivateUser ? (
                 <>
-                    <h4>Chat with {selectedUser}</h4>
+                    <h4>Chat with {selectedPrivateUser}</h4>
 
                     <div style={{
                         border: "1px solid black",
                         height: "250px",
-                        overflowY: "auto",
-                        marginBottom: "10px"
+                        overflowY: "auto"
                     }}>
                         {messages.map((message, index) => (
                             <p key={index}>
