@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from datetime import datetime
+from database import save_user, save_room_message, save_private_message
 
 app = FastAPI()
 
@@ -85,6 +86,8 @@ manager = ConnectionManager()
 @app.websocket("/ws/{room}/{username}")
 async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
     await manager.connect(room, username, websocket)
+
+    save_user(username)
     
     await manager.broadcast(room, {
         "type": "system",
@@ -100,6 +103,12 @@ async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
             timestamp = datetime.now().strftime("%H:%M")
 
             if raw_message["type"] == "room_message":
+                save_room_message(
+                    room,
+                    username,
+                    raw_message["text"]
+                )
+                
                 await manager.broadcast(room, {
                     "type": "room_message",
                     "username": username,
@@ -110,6 +119,12 @@ async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
 
             elif raw_message["type"] == "private_message":
                 receiver = raw_message["to"]
+
+                save_private_message(
+                    username,
+                    receiver,
+                    raw_message["text"]
+                )
 
                 await manager.send_private_message(username, receiver, {
                     "type": "private_message",

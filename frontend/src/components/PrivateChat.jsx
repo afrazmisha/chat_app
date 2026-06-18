@@ -27,6 +27,7 @@ function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivat
                 <button 
                     key={username}
                     onClick={() => openPrivateChat(username)}
+                    className={username === selectedPrivateUser ? "active-private" : "private-user"}
                 >
                     {username}
                     {privateUnread[username] > 0 && ` (${privateUnread[username]})`}
@@ -47,6 +48,8 @@ function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivat
                         {messages.map((message, index) => (
                             <p key={index}>
                                 <strong>{message.from}</strong>: {message.text}
+                                <br />
+                                <small>{message.time}</small>
                             </p>
                         ))}
                     </div>

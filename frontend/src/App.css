@@ -61,3 +61,17 @@ body {
   font-weight: bold;
   border: 2px solid black;
 }
+
+.private-user,
+.active-private {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.active-private {
+  font-weight: bold;
+  border: 2px solid black;
+}
