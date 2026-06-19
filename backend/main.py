@@ -1,12 +1,21 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from datetime import datetime
-from database import save_user, save_room_message, save_private_message
+from database import (
+    save_user, 
+    save_room_message, 
+    save_private_message,
+    get_room_messages,
+)
 
 app = FastAPI()
 
 @app.get("/")
 def home():
     return {"message": "Chat backend is running"}
+
+@app.get("/rooms/{room_name}/messages")
+def room_message_history(room_name: str):
+    return get_room_messages(room_name)
 
 class ConnectionManager:
     def __init__(self):
@@ -144,3 +153,4 @@ async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
 
         await manager.broadcast_users(room)
         await manager.broadcast_global_users()
+

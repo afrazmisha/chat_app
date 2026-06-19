@@ -16,6 +16,25 @@ function Dashboard({ user, setUser }) {
 
     const socketRef = useRef(null);
 
+    //Load room history useEffect
+    useEffect(() => {
+        async function loadRoomHistory() {
+            const response = await fetch(
+                `http://127.0.0.1:8000/rooms/${currentRoom}/messages`
+            );
+
+            const history = await response.json();
+
+            setMessages((prev) => ({
+                ...prev,
+                [currentRoom]: history,
+            }));
+        }
+
+        loadRoomHistory();
+    }, [currentRoom]);
+
+    //WebSocket useEffect
     useEffect(() => {
         const wsUrl = `ws://127.0.0.1:8000/ws/${currentRoom}/${user.username}`;
 

@@ -1,5 +1,5 @@
 function MessageBubble({ message, currentUsername }) {
-    if (message.type === "system") {
+    if (message.type === "message" || message.type === "room_message") {
         return (
             <p style={{ textAlign: "center", color: "gray" }}>
                 {message.text}

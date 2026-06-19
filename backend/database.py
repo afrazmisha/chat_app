@@ -30,7 +30,7 @@ def save_user(username):
 
 def save_room_message(room_name, username, message):
     conn = get_connection()
-    cur = con.cursor()
+    cur = conn.cursor()
 
     cur.execute(
         """
@@ -43,6 +43,38 @@ def save_room_message(room_name, username, message):
     conn.commit()
     cur.close()
     conn.close()
+
+def get_room_messages(room_name):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT username, message, created_at
+        FROM room_messages
+        WHERE room_name = %s
+        ORDER BY created_at ASC
+        """,
+        (room_name,)
+    )
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    messages = []
+
+    for row in rows:
+        messages.append({
+            "type": "room_message",
+            "username": row[0],
+            "text": row[1],
+            "time": row[2].strftime("%H:%M"),
+            "room": room_name
+        })
+
+    return messages
 
 def save_private_message(sender, receiver, message):
     conn = get_connection()
