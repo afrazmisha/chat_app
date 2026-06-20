@@ -91,3 +91,38 @@ def save_private_message(sender, receiver, message):
     conn.commit()
     cur.close()
     conn.close()
+
+def get_private_messages(user1, user2):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT sender, receiver, message, created_at
+        FROM private_messages
+        WHERE
+            (sender = %s AND receiver = %s)
+            OR
+            (sender = %s AND receiver = %s)
+        ORDER BY created_at ASC
+        """,
+        (user1, user2, user2, user1)
+    )
+
+    rows = cur =fetchall()
+
+    cur.close()
+    conn.close()
+
+    messages = []
+
+    for row in rows:
+        messages.append({
+            "type": "private_message",
+            "from": row[0],
+            "to": row[1],
+            "text": row[2],
+            "time": row[3].strftime("%H:%M")
+        })
+
+    return messages

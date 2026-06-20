@@ -25,6 +25,9 @@ function Dashboard({ user, setUser }) {
 
             const history = await response.json();
 
+            console.log("Current room:", currentRoom);
+            console.log("Loaded history:", history);
+
             setMessages((prev) => ({
                 ...prev,
                 [currentRoom]: history,
@@ -59,7 +62,7 @@ function Dashboard({ user, setUser }) {
             }
 
             if (data.type === "private_message") {
-                const otherUser = 
+                const otherUser =
                     data.from === user.username ? data.to : data.from;
 
                 setPrivateMessages((prev) => ({
@@ -143,7 +146,7 @@ function Dashboard({ user, setUser }) {
         )
     }
 
-    function openPrivateChat(username){
+    function openPrivateChat(username) {
         setSelectedPrivateUser(username);
 
         setPrivateUnread((prev) => ({
@@ -203,9 +206,9 @@ function Dashboard({ user, setUser }) {
             </main>
 
             <aside className="private-panel">
-                <PrivateChat 
-                    globalUsers={globalUsers} 
-                    currentUsername={user.username} 
+                <PrivateChat
+                    globalUsers={globalUsers}
+                    currentUsername={user.username}
                     privateMessages={privateMessages}
                     sendPrivateMessage={sendPrivateMessage}
                     selectedPrivateUser={selectedPrivateUser}
