@@ -3,8 +3,10 @@ import RoomChat from "../components/RoomChat"
 import PrivateChat from "../components/PrivateChat"
 
 function Dashboard({ user, setUser }) {
-    const [currentRoom, setCurrentRoom] = useState(user.room);
-    const [joinedRooms, setJoinedRooms] = useState([user.room]);
+    const defaultRoom = "general";
+
+    const [currentRoom, setCurrentRoom] = useState(defaultRoom);
+    const [joinedRooms, setJoinedRooms] = useState([defaultRoom]);
     const [messages, setMessages] = useState({});
     const [users, setUsers] = useState([]);
     const [status, setStatus] = useState("Connecting...");
@@ -13,8 +15,26 @@ function Dashboard({ user, setUser }) {
     const [privateMessages, setPrivateMessages] = useState({});
     const [selectedPrivateUser, setSelectedPrivateUser] = useState(null);
     const [privateUnread, setPrivateUnread] = useState({});
+    const [privateConversations, setPrivateConversations] = useState([]);
 
     const socketRef = useRef(null);
+
+    //Load saved rooms useEffect
+    useEffect (() => {
+        async function loadUserRooms() {
+            const response = await fetch(
+                `http://127.0.0.1:8000/users/${user.username}/rooms`
+            );
+
+            const rooms = await response.json();
+
+            if (rooms.length > 0) {
+                setJoinedRooms((prev) => Array.from(new Set([...prev, ...rooms])));
+            }
+        }
+
+        loadUserRooms();
+    }, [user.username]);
 
     //Load room history useEffect
     useEffect(() => {
@@ -25,9 +45,6 @@ function Dashboard({ user, setUser }) {
 
             const history = await response.json();
 
-            console.log("Current room:", currentRoom);
-            console.log("Loaded history:", history);
-
             setMessages((prev) => ({
                 ...prev,
                 [currentRoom]: history,
@@ -36,6 +53,41 @@ function Dashboard({ user, setUser }) {
 
         loadRoomHistory();
     }, [currentRoom]);
+
+    //Load private history useEffect
+    useEffect(() => {
+        async function loadPrivateHistory() {
+            if (!selectedPrivateUser) return;
+
+            const response = await fetch(
+                `http://127.0.0.1:8000/private/${user.username}/${selectedPrivateUser}/messages`
+            );
+
+            const history = await response.json();
+
+            setPrivateMessages((prev) => ({
+                ...prev,
+                [selectedPrivateUser]: history,
+            }));
+        }
+
+        loadPrivateHistory();
+    }, [selectedPrivateUser, user.username]);
+
+    //Load private conversation useEffect
+    useEffect(() => {
+        async function loadPrivateConversations() {
+            const response = await fetch(
+                `http://127.0.0.1:8000/users/${user.username}/private-conversations`
+            );
+
+            const conversations = await response.json();
+
+            setPrivateConversations(conversations);
+        }
+
+        loadPrivateConversations();
+    }, [user.username]);
 
     //WebSocket useEffect
     useEffect(() => {
@@ -187,7 +239,10 @@ function Dashboard({ user, setUser }) {
                     </button>
                 ))}
 
-                <button onClick={() => setUser(null)}>
+                <button 
+                    onClick={() => {
+                        setUser(null);
+                    }}>
                     Logout
                 </button>
             </aside>
@@ -214,6 +269,7 @@ function Dashboard({ user, setUser }) {
                     selectedPrivateUser={selectedPrivateUser}
                     openPrivateChat={openPrivateChat}
                     privateUnread={privateUnread}
+                    privateConversations={privateConversations}
                 />
             </aside>
         </div>

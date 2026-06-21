@@ -109,7 +109,7 @@ def get_private_messages(user1, user2):
         (user1, user2, user2, user1)
     )
 
-    rows = cur =fetchall()
+    rows = cur.fetchall()
 
     cur.close()
     conn.close()
@@ -126,3 +126,122 @@ def get_private_messages(user1, user2):
         })
 
     return messages
+
+def get_user_rooms(username):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT room_name
+        FROM room_messages
+        WHERE username = %s
+        ORDER BY room_name ASC
+        """,
+        (username,)
+    )
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return [row[0] for row in rows]
+
+def save_room_member(username, room_name):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO room_members (username, room_name)
+        VALUES (%s, %s)
+        ON CONFLICT (username, room_name) DO NOTHING 
+        """,
+        (username, room_name)
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def get_private_conversations(username):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT DISTINCT
+            CASE
+                WHEN sender = %s THEN receiver
+                ELSE sender
+            END AS other_user
+        FROM private_messages
+        WHERE sender = %s OR receiver = %s
+        ORDER BY other_user ASC
+        """,
+        (username, username, username)
+    )
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return [row[0] for row in rows]
+
+def create_user(username, email, password_hash):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO users (username, email, password_hash)
+        VALUES (%s, %s, %s)
+        ON CONFLICT DO NOTHING
+        RETURNING id, username, email
+        """,
+        (username, email, password_hash)
+    )
+
+    user = cur.fetchone()
+
+    if not user:
+        conn.commit()
+        cur.close()
+        conn.close()
+        return None
+
+    return {
+        "id": user[0],
+        "username": user[1],
+        "email": user[2]
+    }
+
+def get_user_by_email(email):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT id, username, email, password_hash
+            FROM users
+            WHERE email = %s
+        """,
+        (email,)
+    )
+
+    user = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not user:
+        return None
+
+    return {
+        "id": user[0],
+        "username": user[1],
+        "email": user[2],
+        "password_hash": user[3]
+    }

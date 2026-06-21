@@ -1,14 +1,19 @@
 import { useState } from "react";
 
-function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivateMessage, selectedPrivateUser, openPrivateChat, privateUnread }) {
+function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivateMessage, selectedPrivateUser, openPrivateChat, privateUnread, privateConversations, }) {
     const [text, setText] = useState("")
 
     const otherUsers = globalUsers.filter(
         (username) => username !== currentUsername
     );
 
-    const messages = selectedPrivateUser 
-    ? privateMessages[selectedPrivateUser] || [] : [];
+    const allCoversations = Array.from(
+        new Set([...privateConversations, ...otherUsers])
+    );
+
+    const messages = selectedPrivateUser
+        ? privateMessages[selectedPrivateUser] || [] : [];
+
 
     function handleSend() {
         if (!selectedPrivateUser) return;
@@ -17,22 +22,26 @@ function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivat
         setText("");
     }
 
-    return(
+    return (
         <div>
             <h3>Private Chat</h3>
-            
+
             <h4>Conversations</h4>
 
-            {otherUsers.map((username) => (
-                <button 
-                    key={username}
-                    onClick={() => openPrivateChat(username)}
-                    className={username === selectedPrivateUser ? "active-private" : "private-user"}
-                >
-                    {username}
-                    {privateUnread[username] > 0 && ` (${privateUnread[username]})`}
-                </button>
-            ))}
+            {allCoversations.map((username) => {
+                const isOnline = globalUsers.includes(username);
+
+                return (
+                    <button
+                        key={username}
+                        onClick={() => openPrivateChat(username)}
+                        className={username === selectedPrivateUser ? "active-private" : "private-user"}
+                    >
+                        {username} {isOnline ? "🟢" : "⚪"}
+                        {privateUnread[username] > 0 && ` (${privateUnread[username]})`}
+                    </button>
+                )
+            })}
 
             <hr />
 
@@ -54,7 +63,7 @@ function PrivateChat({ globalUsers, currentUsername, privateMessages, sendPrivat
                         ))}
                     </div>
 
-                    <input 
+                    <input
                         placeholder="Type private message"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
