@@ -13,6 +13,8 @@ from database import (
     save_room_member,
     get_private_conversations,
     get_user_by_email,
+    get_profile,
+    update_profile
 )
 from pydantic import BaseModel
 from database import create_user
@@ -64,6 +66,10 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class ProfileUpdateRequest(BaseModel):
+    bio: str | None = None
+    avatar_url: str | None = None
 
 @app.get("/")
 def home():
@@ -146,14 +152,32 @@ def private_message_history(
     user2: str,
     current_user: dict = Depends(get_current_user)
 ):
+    if current_user["username"] != user1:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+
     return get_private_messages(user1, user2)
 
 @app.get("/users/{username}/rooms")
-def user_rooms(username: str):
+def user_rooms(username: str, current_user: dict = Depends(get_current_user)):
+    if current_user["username"] != username:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+
     return get_user_rooms(username)
 
 @app.get("/users/{username}/private-conversations")
-def user_private_conversations(username: str):
+def user_private_conversations(username: str, current_user: dict = Depends(get_current_user)):
+    if current_user["username"] != username:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+
     return get_private_conversations(username)
 
 class ConnectionManager:
@@ -311,3 +335,17 @@ async def websocket_endpoint(
         await manager.broadcast_users(room)
         await manager.broadcast_global_users()
 
+@app.get("/profile")
+def profile(current_user: dict = Depends(get_current_user)):
+    return get_profile(current_user["username"])
+
+@app.put("/profile")
+def edit_profile(
+    profile_data: ProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    return update_profile(
+        current_user["username"],
+        profile_data.bio,
+        profile_data.avatar_url
+    )

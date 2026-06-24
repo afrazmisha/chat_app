@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import RoomChat from "../components/RoomChat"
 import PrivateChat from "../components/PrivateChat"
+import ProfilePanel from "../components/ProfilePanel";
 
 function Dashboard({ user, setUser }) {
     const defaultRoom = "general";
@@ -22,14 +23,30 @@ function Dashboard({ user, setUser }) {
     //Load saved rooms useEffect
     useEffect(() => {
         async function loadUserRooms() {
+            const token = localStorage.getItem("chat_token");
+
             const response = await fetch(
-                `http://127.0.0.1:8000/users/${user.username}/rooms`
+                `http://127.0.0.1:8000/users/${user.username}/rooms`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
             );
+
+            if (!response.ok) {
+                alert("Session expired. Please login again.");
+                localStorage.removeItem("chat_user");
+                localStorage.removeItem("chat_token");
+                window.location.reload();
+                return;
+            }
 
             const rooms = await response.json();
 
             if (rooms.length > 0) {
-                setJoinedRooms((prev) => Array.from(new Set([...prev, ...rooms])));
+                setJoinedRooms((prev) =>
+                    Array.from(new Set([...prev, ...rooms])));
             }
         }
 
@@ -106,9 +123,24 @@ function Dashboard({ user, setUser }) {
     //Load private conversation useEffect
     useEffect(() => {
         async function loadPrivateConversations() {
+            const token = localStorage.getItem("chat_token");
+
             const response = await fetch(
-                `http://127.0.0.1:8000/users/${user.username}/private-conversations`
+                `http://127.0.0.1:8000/users/${user.username}/private-conversations`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
             );
+
+            if (!response.ok) {
+                alert("Session expired. Please login again.");
+                localStorage.removeItem("chat_user");
+                localStorage.removeItem("chat_token");
+                window.location.reload();
+                return;
+            }
 
             const conversations = await response.json();
 
@@ -247,6 +279,8 @@ function Dashboard({ user, setUser }) {
                     <strong>{user.username}</strong>
                     <p>Current Room: {currentRoom}</p>
                 </div>
+
+                <ProfilePanel />
 
                 <input
                     placeholder="Room Name"

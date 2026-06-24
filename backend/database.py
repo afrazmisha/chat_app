@@ -249,3 +249,60 @@ def get_user_by_email(email):
         "email": user[2],
         "password_hash": user[3]
     }
+
+def get_profile(username):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT id, username, email, bio, avatar_url, last_seen, created_at
+        FROM users
+        WHERE username = %s
+        """,
+        (username,)
+    )
+
+    user = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not user:
+        return None
+
+    return {
+        "id": user[0],
+        "username": user[1],
+        "email": user[2],
+        "bio": user[3],
+        "avatar_url": user[4],
+        "last_seen": user[5],
+        "created_at": user[6],
+    }
+
+def update_profile(username, bio, avatar_url):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE users
+        SET bio = %s, avatar_url = %s
+        WHERE username = %s
+        RETURNING id, username, email, bio, avatar_url
+        """,
+        (bio, avatar_url, username)
+    )
+
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    return {
+        "id": user[0],
+        "username": user[1],
+        "email": user[2],
+        "bio": user[3],
+        "avatar_url": user[4],
+    }
