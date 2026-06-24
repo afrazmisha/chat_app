@@ -20,7 +20,7 @@ function Dashboard({ user, setUser }) {
     const socketRef = useRef(null);
 
     //Load saved rooms useEffect
-    useEffect (() => {
+    useEffect(() => {
         async function loadUserRooms() {
             const response = await fetch(
                 `http://127.0.0.1:8000/users/${user.username}/rooms`
@@ -39,9 +39,23 @@ function Dashboard({ user, setUser }) {
     //Load room history useEffect
     useEffect(() => {
         async function loadRoomHistory() {
+            const token = localStorage.getItem("chat_token");
+
             const response = await fetch(
-                `http://127.0.0.1:8000/rooms/${currentRoom}/messages`
+                `http://127.0.0.1:8000/rooms/${currentRoom}/messages`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
             );
+
+            if (!response.ok) {
+                alert("Session expired. Please login again.");
+                localStorage.removeItem("chat_user");
+                localStorage.removeItem("chat_token");
+                window.location.reload();
+                return;
+            }
 
             const history = await response.json();
 
@@ -59,9 +73,24 @@ function Dashboard({ user, setUser }) {
         async function loadPrivateHistory() {
             if (!selectedPrivateUser) return;
 
+            const token = localStorage.getItem("chat_token");
+
             const response = await fetch(
-                `http://127.0.0.1:8000/private/${user.username}/${selectedPrivateUser}/messages`
+                `http://127.0.0.1:8000/private/${user.username}/${selectedPrivateUser}/messages`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
             );
+
+            if (!response.ok) {
+                alert("Session expired. Please login again.");
+                localStorage.removeItem("chat_user");
+                localStorage.removeItem("chat_token");
+                window.location.reload();
+                return;
+            }
 
             const history = await response.json();
 
@@ -91,7 +120,9 @@ function Dashboard({ user, setUser }) {
 
     //WebSocket useEffect
     useEffect(() => {
-        const wsUrl = `ws://127.0.0.1:8000/ws/${currentRoom}/${user.username}`;
+        const token = localStorage.getItem("chat_token");
+
+        const wsUrl = `ws://127.0.0.1:8000/ws/${currentRoom}/${user.username}?token=${token}`;
 
         const socket = new WebSocket(wsUrl);
         socketRef.current = socket;
@@ -239,7 +270,7 @@ function Dashboard({ user, setUser }) {
                     </button>
                 ))}
 
-                <button 
+                <button
                     onClick={() => {
                         setUser(null);
                     }}>

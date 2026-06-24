@@ -212,6 +212,10 @@ def create_user(username, email, password_hash):
         conn.close()
         return None
 
+    conn.commit()
+    cur.close()
+    conn.close()
+
     return {
         "id": user[0],
         "username": user[1],

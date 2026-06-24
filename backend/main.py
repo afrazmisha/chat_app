@@ -91,9 +91,9 @@ def signup(user: SignupRequest):
             "user": new_user
         }
 
-    except Exception:
+    except Exception as e:
         return {
-            "error": "Username or email already exists"
+            "error": str(e)
         }
 
 @app.post("/login")
@@ -232,7 +232,24 @@ manager = ConnectionManager()
 
 
 @app.websocket("/ws/{room}/{username}")
-async def websocket_endpoint(websocket: WebSocket, room: str, username: str):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    room: str,
+    username: str,
+    token: str
+):
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        if payload["username"] != username:
+            await websocket.close(code=1008)
+            return
+    
+    except JSWError:
+        await websocket.close(code=1008)
+        return
+
     await manager.connect(room, username, websocket)
 
     save_user(username)
