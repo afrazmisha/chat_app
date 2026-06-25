@@ -212,7 +212,7 @@ function Dashboard({ user, setUser }) {
         return () => {
             socket.close();
         };
-    }, [currentRoom, user.username]);
+    }, [currentRoom, user.username, selectedPrivateUser]);
 
     function switchRoom(roomName) {
         const cleanRoom = roomName.trim();
