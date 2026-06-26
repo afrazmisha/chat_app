@@ -1,0 +1,42 @@
+.profile-card {
+    background: #1f2937;
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #374151;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 42px;
+    margin: auto;
+    margin-bottom: 15px;
+}
+
+.profile-card h3 {
+    margin: 8px 0;
+}
+
+.profile-email {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.profile-bio {
+    margin-top: 15px;
+    font-style: italic;
+    color: #d1d5db;
+}
+
+.profile-date {
+    margin-top: 18px;
+    font-size: 13px;
+    color: #9ca3af;
+}

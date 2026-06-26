@@ -14,7 +14,8 @@ from database import (
     get_private_conversations,
     get_user_by_email,
     get_profile,
-    update_profile
+    update_profile,
+    update_last_seen
 )
 from pydantic import BaseModel
 from database import create_user
@@ -326,6 +327,7 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         manager.disconnect(room, username, websocket)
+        update_last_seen(username)
 
         await manager.broadcast(room, {
             "type": "system",

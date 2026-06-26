@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import RoomChat from "../components/RoomChat"
 import PrivateChat from "../components/PrivateChat"
 import ProfilePanel from "../components/ProfilePanel";
+import ProfileCard from "../components/ProfileCard";
 
 function Dashboard({ user, setUser }) {
     const defaultRoom = "general";
@@ -279,6 +280,8 @@ function Dashboard({ user, setUser }) {
                     <strong>{user.username}</strong>
                     <p>Current Room: {currentRoom}</p>
                 </div>
+
+                <ProfileCard />
 
                 <ProfilePanel />
 

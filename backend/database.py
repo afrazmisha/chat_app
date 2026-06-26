@@ -306,3 +306,38 @@ def update_profile(username, bio, avatar_url):
         "bio": user[3],
         "avatar_url": user[4],
     }
+
+def update_last_seen(username):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE users
+        SET last_seen = CURRENT_TIMESTAMP
+        WHERE username = %s
+        """,
+        (username,)
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def set_user_online(username, online):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE users
+        SET is_online = %s
+        WHERE username = %s
+        """,
+        (online, username)
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
