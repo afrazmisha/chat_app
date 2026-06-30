@@ -15,7 +15,9 @@ from database import (
     get_user_by_email,
     get_profile,
     update_profile,
-    update_last_seen
+    update_last_seen,
+    set_user_online,
+    mark_room_message_seen,
 )
 from pydantic import BaseModel
 from database import create_user
@@ -276,6 +278,7 @@ async def websocket_endpoint(
         return
 
     await manager.connect(room, username, websocket)
+    set_user_online(username, True);
 
     save_user(username)
     save_room_member(username, room)
@@ -291,10 +294,36 @@ async def websocket_endpoint(
     try:
         while True:
             raw_message = await websocket.receive_json()
+
+            print(raw_message)
+
             timestamp = datetime.now().strftime("%H:%M")
 
+            if raw_message["type"] == "typing":
+                await manager.broadcast(
+                    room,
+                    {
+                        "type": "typing",
+                        "username": username
+                    }
+                )
+                continue
+
+            if raw_message["type"] == "message_seen":
+                message_id = raw_message["message_id"]
+
+                mark_room_message_seen(message_id, username)
+
+                await manager.broadcast(room, {
+                    "type": "message_seen",
+                    "message_id": message_id,
+                    "username": username
+                })
+
+                continue
+
             if raw_message["type"] == "room_message":
-                save_room_message(
+                message_id = save_room_message(
                     room,
                     username,
                     raw_message["text"]
@@ -302,10 +331,12 @@ async def websocket_endpoint(
                 
                 await manager.broadcast(room, {
                     "type": "room_message",
+                    "id": message_id,
                     "username": username,
                     "text": raw_message["text"],
                     "time": timestamp,
-                    "room": room
+                    "room": room,
+                    "seen_by": []
                 })
 
             elif raw_message["type"] == "private_message":
@@ -327,6 +358,7 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         manager.disconnect(room, username, websocket)
+        set_user_online(username, False)
         update_last_seen(username)
 
         await manager.broadcast(room, {

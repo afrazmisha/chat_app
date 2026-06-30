@@ -60,20 +60,31 @@ function ProfileCard() {
             </p>
 
             <p className="profile-bio">
-                {profile.bio || "No bio yet."}
+                {profile.bio || "No bio added yet."}
             </p>
 
             <p className="profile-date">
-                Joined: {" "}
-                {new Date(profile.created_at).toLocaleDateString()}
+                Member since{" "} 
+                {new Date(profile.created_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric"
+                })}
             </p>
 
-            <p className="profile-date">
-                Last seen: {" "}
-                {profile.last_seen
-                    ? new Date(profile.last_seen).toLocaleString()
-                    : "Online"}
-            </p>
+            {profile.is_online ? (
+                <p className="profile-status online">
+                    🟢 Online
+                </p>
+            ) : (
+                <p className="profile-status offline">
+                    ⚫ Last seen{" "}
+                    {profile.last_seen
+                        ? new Date(profile.last_seen).toLocaleString()
+                        : "Unknown"
+                    }
+                </p>
+            )}
 
             <button onClick={() => setIsEditing(true)}>
                 Edit Profile

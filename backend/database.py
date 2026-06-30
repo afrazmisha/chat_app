@@ -36,13 +36,18 @@ def save_room_message(room_name, username, message):
         """
         INSERT INTO room_messages (room_name, username, message)
         VALUES (%s, %s, %s)
+        RETURNING id
         """,
         (room_name, username, message)
     )
 
+    message.id = cur.fetchone()[0]
+
     conn.commit()
     cur.close()
     conn.close()
+
+    return message_id
 
 def get_room_messages(room_name):
     conn = get_connection()
@@ -50,7 +55,7 @@ def get_room_messages(room_name):
 
     cur.execute(
         """
-        SELECT username, message, created_at
+        SELECT id, username, message, created_at
         FROM room_messages
         WHERE room_name = %s
         ORDER BY created_at ASC
@@ -68,10 +73,12 @@ def get_room_messages(room_name):
     for row in rows:
         messages.append({
             "type": "room_message",
-            "username": row[0],
-            "text": row[1],
-            "time": row[2].strftime("%H:%M"),
-            "room": room_name
+            "id": row[0],
+            "username": row[1],
+            "text": row[2],
+            "time": row[3].strftime("%H:%M"),
+            "room": room_name,
+            "seen_by": []
         })
 
     return messages
@@ -256,7 +263,7 @@ def get_profile(username):
 
     cur.execute(
         """
-        SELECT id, username, email, bio, avatar_url, last_seen, created_at
+        SELECT id, username, email, bio, avatar_url, last_seen, created_at, is_online
         FROM users
         WHERE username = %s
         """,
@@ -279,6 +286,7 @@ def get_profile(username):
         "avatar_url": user[4],
         "last_seen": user[5],
         "created_at": user[6],
+        "is_online": user[7],
     }
 
 def update_profile(username, bio, avatar_url):
@@ -341,3 +349,19 @@ def set_user_online(username, online):
     cur.close()
     conn.close()
 
+def mark_room_message_seen(message_id, username):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO room_message_reads (message_id, username)
+        VALUES (%s, %s)
+        ON CONFLICT (message_id, username) DO NOTHING
+        """,
+        (message_id, username)
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()

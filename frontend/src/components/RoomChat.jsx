@@ -1,6 +1,6 @@
 import MessageBubble from "./MessageBubble";
 
-function RoomChat({ user, currentRoom, messages, sendMessage, text, setText, users, status }) {
+function RoomChat({ user, currentRoom, messages, sendMessage, text, setText, users, status, typingUsers }) {
     return (
         <>
             <div className="room-header">
@@ -28,6 +28,16 @@ function RoomChat({ user, currentRoom, messages, sendMessage, text, setText, use
                     />
                 ))}
             </div>
+
+
+            {typingUsers.length > 0 && (
+                <div className="typing-indicator">
+                    {typingUsers.join(", ")}
+                    {typingUsers.length === 1
+                        ? " is typing..."
+                        : " are typing..."}
+                </div>
+            )}
 
             <br />
 

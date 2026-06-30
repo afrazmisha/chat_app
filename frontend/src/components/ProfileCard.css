@@ -40,3 +40,16 @@
     font-size: 13px;
     color: #9ca3af;
 }
+
+.profile-status {
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+.profile-status.online {
+    color: #22c55e;   /* Green */
+}
+
+.profile-status.offline {
+    color: #9ca3af;   /* Gray */
+}

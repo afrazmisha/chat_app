@@ -11,6 +11,7 @@ function Dashboard({ user, setUser }) {
     const [joinedRooms, setJoinedRooms] = useState([defaultRoom]);
     const [messages, setMessages] = useState({});
     const [users, setUsers] = useState([]);
+    const [typingUsers, setTypingUsers] = useState([]);
     const [status, setStatus] = useState("Connecting...");
     const [text, setText] = useState("");
     const [globalUsers, setGlobalUsers] = useState([]);
@@ -18,6 +19,7 @@ function Dashboard({ user, setUser }) {
     const [selectedPrivateUser, setSelectedPrivateUser] = useState(null);
     const [privateUnread, setPrivateUnread] = useState({});
     const [privateConversations, setPrivateConversations] = useState([]);
+    const lastTypingRef = useRef(0);
 
     const socketRef = useRef(null);
 
@@ -166,6 +168,7 @@ function Dashboard({ user, setUser }) {
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
+            console.log("Received:", data);
 
             if (data.type === "users") {
                 setUsers(data.users);
@@ -174,6 +177,26 @@ function Dashboard({ user, setUser }) {
 
             if (data.type === "global_users") {
                 setGlobalUsers(data.users);
+                return;
+            }
+
+            if (data.type === "typing") {
+                if (data.username !== user.username) {
+                    setTypingUsers((prev) => {
+                        if (prev.includes(data.username)) {
+                            return prev;
+                        }
+
+                        return [...prev, data.username];
+                    });
+
+                    setTimeout(() => {
+                        setTypingUsers((prev) =>
+                            prev.filter((name) => name !== data.username)
+                        );
+                    }, 1500);
+                }
+
                 return;
             }
 
@@ -235,14 +258,16 @@ function Dashboard({ user, setUser }) {
             return;
         }
 
+        console.log("Sending typing event")
+
         socketRef.current.send(
             JSON.stringify({
-                type: "room_message",
-                text: text,
+                type: "typing",
             })
         );
 
         setText("");
+        setTypingUsers([])
     }
 
     function sendPrivateMessage(to, privateText) {
@@ -322,9 +347,28 @@ function Dashboard({ user, setUser }) {
                     messages={messages[currentRoom] || []}
                     sendMessage={sendMessage}
                     text={text}
-                    setText={setText}
+                    setText={(value) => {
+                        setText(value);
+
+                        const now = Date.now();
+
+                        if (
+                            socketRef.current && 
+                            socketRef.current.readyState === WebSocket.OPEN &&
+                            now - lastTypingRef.current > 1000
+                        ) {
+                            socketRef.current.send(
+                                JSON.stringify({
+                                    type: "typing",
+                                })
+                            );
+
+                            lastTypingRef.current = now;
+                        }
+                    }}
                     users={users}
                     status={status}
+                    typingUsers={typingUsers}
                 />
             </main>
 
